@@ -7,13 +7,13 @@
   "publisher": "aboisier",
   "version": "0.0.1",
   "license": "MIT",
-  "homepage": "https://github.com/aboisier/vscode-example-test-adapter",
+  "homepage": "https://github.com/aboisier/vscode-testyts-test-adapter",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aboisier/vscode-example-test-adapter.git"
+    "url": "https://github.com/aboisier/vscode-testyts-test-adapter.git"
   },
   "bugs": {
-    "url": "https://github.com/aboisier/vscode-example-test-adapter/issues"
+    "url": "https://github.com/aboisier/vscode-testyts-test-adapter/issues"
   },
   "categories": [
     "Other"
@@ -57,14 +57,14 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "Example Test Explorer configuration",
+      "title": "TestyTs Test Explorer configuration",
       "properties": {
-        "exampleExplorer.logpanel": {
+        "testytsExplorer.logpanel": {
           "description": "write diagnotic logs to an output panel",
           "type": "boolean",
           "scope": "resource"
         },
-        "exampleExplorer.logfile": {
+        "testytsExplorer.logfile": {
           "description": "write diagnostic logs to the given file",
           "type": "string",
           "scope": "resource"
