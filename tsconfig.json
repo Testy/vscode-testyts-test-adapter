@@ -6,8 +6,6 @@
     "outDir": "out",
     "importHelpers": true,
     "sourceMap": true,
-    "strict": true,
-    "noImplicitReturns": true,
     "noUnusedLocals": true,
     "removeComments": true,
     "skipLibCheck": true

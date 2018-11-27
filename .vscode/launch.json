@@ -7,7 +7,8 @@
       "name": "Example adapter",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--traceResolution"
       ],
       "outFiles": [
         "${workspaceFolder}/out"
