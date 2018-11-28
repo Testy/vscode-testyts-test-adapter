@@ -1,13 +1,14 @@
+import { fork } from 'child_process';
 import * as vscode from 'vscode';
-import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent, TestRunStartedEvent, TestRunFinishedEvent, TestSuiteEvent, TestEvent } from 'vscode-test-adapter-api';
-import { Log } from 'vscode-test-adapter-util';
+import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent } from 'vscode-test-adapter-api';
+import { Log, detectNodePath } from 'vscode-test-adapter-util';
 import { runFakeTests } from './fakeTests';
-import { TestLoader } from './testLoader';
+import { Config } from './models/models';
+// import './workers/testLoaderWorker';
 
 export class TestyTsAdapter implements TestAdapter {
 
     private disposables: { dispose(): void }[] = [];
-
     private readonly testsEmitter = new vscode.EventEmitter<TestLoadStartedEvent | TestLoadFinishedEvent>();
     private readonly testStatesEmitter = new vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>();
     private readonly autorunEmitter = new vscode.EventEmitter<void>();
@@ -16,9 +17,10 @@ export class TestyTsAdapter implements TestAdapter {
     get testStates(): vscode.Event<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent> { return this.testStatesEmitter.event; }
     get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
+    private config: Config;
+
     constructor(
         public readonly workspace: vscode.WorkspaceFolder,
-        private testLoader: TestLoader,
         private readonly log: Log
     ) {
         this.log.info('Initializing testyTsAdapter adapter');
@@ -26,21 +28,36 @@ export class TestyTsAdapter implements TestAdapter {
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.autorunEmitter);
+
+        this.disposables.push(vscode.workspace.onDidChangeConfiguration(async () => {
+            this.config = await this.loadConfig();
+        }));
     }
 
     async load(): Promise<void> {
+        if (!this.config) {
+            this.config = await this.loadConfig();
+        }
 
         this.log.info('Loading example tests');
 
-        this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        try {
-            const loadedTests = await this.testLoader.load();
-            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
-        }
-        catch (err) {
-            console.log(err);
-        }
+        fork(require.resolve('./workers/testLoaderWorker.js'), [],
+            { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
+            .on('message', response => {
+                if (response instanceof String) {
+                    console.log(response);
+                    throw response;
+                }
+                else {
+                    this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: response });
+                }
+            })
+            .on('error', error => {
+                throw error;
+            });
+
+        this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
     }
 
     async run(tests: string[]): Promise<void> {
@@ -73,5 +90,14 @@ export class TestyTsAdapter implements TestAdapter {
             disposable.dispose();
         }
         this.disposables = [];
+    }
+
+    private async loadConfig(): Promise<Config> {
+        const config = vscode.workspace.getConfiguration('testyTsExplorer', this.workspace.uri);
+
+        const adapterConfig: Config = {};
+        adapterConfig.nodePath = config.get('nodePath') || await detectNodePath();
+
+        return adapterConfig;
     }
 }

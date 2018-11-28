@@ -1,44 +1,32 @@
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
 import { TestyConfig } from 'testyts/build/lib/interfaces/config';
+import { TestyTestInfo, TestyTestRootInfo, TestyTestSuiteInfo } from './models/models';
 import { resolve } from 'path';
-import { WorkspaceFolder } from 'vscode';
+import { TestSuite } from 'testyts/build/lib/testSuite';
 
 export class TestLoader {
-    constructor(private workspace: WorkspaceFolder) { }
+    constructor() { }
 
     public async load(): Promise<TestSuiteInfo> {
-        const cwd = process.cwd();
-        process.chdir(this.workspace.uri.fsPath);
-        console.log(process.cwd());
         const testLoader = new TestsLoader();
-        const tsconfig = require(resolve(this.workspace.uri.fsPath, 'tsconfig.json'));
-        tsconfig.compilerOptions.rootDir = this.workspace.uri.fsPath;
-        const testyConfig: TestyConfig = require(resolve(this.workspace.uri.fsPath, 'testy.json'));
+        const tsconfig = require(resolve(process.cwd(), 'tsconfig.json'));
+        const testyConfig: TestyConfig = require(resolve(process.cwd(), 'testy.json'));
 
-        const tests = await testLoader.loadTests(this.workspace.uri.fsPath, testyConfig.include, tsconfig);
+        const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsconfig);
+        const testsInfo = this.transformToTestsToTestsInfo(tests);
+        return testsInfo;
+    }
 
-        process.chdir(cwd);
-
-        const rootTestSuite: TestSuiteInfo = {
-            type: 'suite',
-            id: 'root',
-            label: 'TestyTs',
-            children: []
-        };
-
+    private transformToTestsToTestsInfo(tests: TestSuite<any>[]) {
         if (!tests) {
-            return rootTestSuite;
+            return new TestyTestRootInfo([]);
         }
 
+        const rootTestSuite = new TestyTestRootInfo();
         for (const testSuite of tests) {
-            const testSuiteInfo: TestSuiteInfo = {
-                type: 'suite',
-                id: testSuite.name,
-                label: testSuite.name,
-                children: this.getTests(testSuite.tests, testSuite.name)
-            };
-
+            const children = this.getTests(testSuite.tests, testSuite.name);
+            const testSuiteInfo = new TestyTestSuiteInfo(testSuite.name, testSuite.name, children);
             rootTestSuite.children.push(testSuiteInfo);
         }
 
@@ -52,22 +40,13 @@ export class TestLoader {
             const test = tests[testId];
             const hasTestcases = !(test instanceof Function);
 
+            const id = `${prefix}.${testId}`;
             if (hasTestcases) {
-                const id = `${prefix}${testId}`;
-                children.push({
-                    id: id,
-                    label: testId,
-                    type: 'nested',
-                    children: this.getTests(test, id)
-                });
+                const testCases = this.getTests(test, id);
+                children.push(new TestyTestSuiteInfo(id, testId, testCases));
             }
             else {
-                children.push({
-                    id: testId,
-                    label: testId,
-                    type: 'test',
-                    test: test
-                });
+                children.push(new TestyTestInfo(id, testId, false));
             }
         }
 

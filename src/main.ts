@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { TestHub, testExplorerExtensionId } from 'vscode-test-adapter-api';
 import { Log, TestAdapterRegistrar } from 'vscode-test-adapter-util';
 import { TestyTsAdapter } from './adapter';
-import { TestLoader } from './testLoader';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -16,11 +15,10 @@ export async function activate(context: vscode.ExtensionContext) {
     if (testExplorerExtension) {
         const testHub = testExplorerExtension.exports;
 
-        const testLoader = new TestLoader(workspaceFolder);
 
         context.subscriptions.push(new TestAdapterRegistrar(
             testHub,
-            workspaceFolder => new TestyTsAdapter(workspaceFolder, testLoader, log),
+            workspaceFolder => new TestyTsAdapter(workspaceFolder, log),
             log
         ));
     }
