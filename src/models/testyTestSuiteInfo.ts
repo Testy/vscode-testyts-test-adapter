@@ -7,5 +7,5 @@ export class TestyTestSuiteInfo implements TestSuiteInfo {
     public line?: number;
     public get type(): 'suite' { return 'suite'; }
 
-    constructor(public id: string, public label: string, public children: Array<TestyTestSuiteInfo | TestyTestInfo>) { }
+    constructor(public id: string, public label: string, public children: Array<TestyTestSuiteInfo | TestyTestInfo> = []) { }
 }

@@ -4,7 +4,6 @@ import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, Te
 import { Log, detectNodePath } from 'vscode-test-adapter-util';
 import { runFakeTests } from './fakeTests';
 import { Config } from './models/models';
-// import './workers/testLoaderWorker';
 
 export class TestyTsAdapter implements TestAdapter {
 
@@ -66,9 +65,10 @@ export class TestyTsAdapter implements TestAdapter {
 
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
 
+        this.testStatesEmitter.fire(<TestEvent>{ type: 'test', state: 'passed', test: tests[0] });
+
         // in a "real" TestAdapter this would start a test run in a child process
         await runFakeTests(tests, this.testStatesEmitter);
-
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
 
     }
