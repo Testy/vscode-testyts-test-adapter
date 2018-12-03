@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log, detectNodePath } from 'vscode-test-adapter-util';
 import { Config } from './models/models';
-import { run } from './workers/testRunner.worker';
 
 export class TestyTsAdapter implements TestAdapter {
 
@@ -135,7 +134,7 @@ export class TestyTsAdapter implements TestAdapter {
         const subscription = vscode.debug.onDidTerminateDebugSession((session) => {
             if (currentSession != session) { return; }
             this.log.info('Debug session ended');
-            this.cancel(); // just ot be sure
+            this.cancel();
             subscription.dispose();
         });
     }
@@ -159,7 +158,7 @@ export class TestyTsAdapter implements TestAdapter {
 
         const adapterConfig: Config = {};
         adapterConfig.nodePath = config.get('nodePath') || await detectNodePath();
-        adapterConfig.debuggerPort = adapterConfig.debuggerPort || 9220;
+        adapterConfig.debuggerPort = config.get('debuggerPort') || 9229;
 
         return adapterConfig;
     }
