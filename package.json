@@ -7,13 +7,13 @@
     "publisher": "aboisier",
     "version": "0.0.1",
     "license": "MIT",
-    "homepage": "https://github.com/aboisier/vscode-testyts-test-adapter",
+    "homepage": "https://github.com/Testy/vscode-testyts-test-adapter",
     "repository": {
         "type": "git",
-        "url": "https://github.com/aboisier/vscode-testyts-test-adapter.git"
+        "url": "https://github.com/Testy/vscode-testyts-test-adapter.git"
     },
     "bugs": {
-        "url": "https://github.com/aboisier/vscode-testyts-test-adapter/issues"
+        "url": "https://github.com/Testy/vscode-testyts-test-adapter/issues"
     },
     "categories": [
         "Other"
