@@ -1,12 +1,9 @@
-import { fork } from 'child_process';
+import { fork, ChildProcess } from 'child_process';
 import * as vscode from 'vscode';
 import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log, detectNodePath } from 'vscode-test-adapter-util';
-import { runFakeTests } from './fakeTests';
 import { Config } from './models/models';
-import { TestSuite } from 'testyts/build/lib/tests/testSuite';
 import { run } from './workers/testRunner.worker';
-import { load } from './workers/testLoader.worker';
 
 export class TestyTsAdapter implements TestAdapter {
 
@@ -20,6 +17,7 @@ export class TestyTsAdapter implements TestAdapter {
     get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
     private config: Config;
+    private testRunProcess: ChildProcess;
 
     constructor(
         public readonly workspace: vscode.WorkspaceFolder,
@@ -62,25 +60,21 @@ export class TestyTsAdapter implements TestAdapter {
     }
 
     async run(tests: string[]): Promise<void> {
+        if (!this.config) {
+            return;
+        }
 
         this.log.info(`Running example tests ${JSON.stringify(tests)}`);
-
-        this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
-
-        this.testStatesEmitter.fire(<TestEvent>{ type: 'test', state: 'passed', test: tests[0] });
-
         // process.chdir(this.workspace.uri.fsPath);
         // await run(tests);
 
-        fork(require.resolve('./workers/testRunner.worker.js'), [JSON.stringify(tests)],
+        this.testRunProcess = fork(require.resolve('./workers/testRunner.worker.js'), [JSON.stringify(tests)],
             { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
             .on('message', (response: TestEvent | TestRunFinishedEvent) => {
                 if (response instanceof String) {
                     console.log(response);
-                    throw response;
                 }
                 else {
-                    console.log(response);
                     this.testStatesEmitter.fire(response);
                 }
             })
@@ -88,9 +82,10 @@ export class TestyTsAdapter implements TestAdapter {
                 this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
                 throw error;
             })
-            .on('close', number => {
-                console.log(number);
+            .on('exit', number => {
+                this.log.info(`Test run finished with code ${number}`);
                 this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+                this.testRunProcess = undefined;
             });
     }
 
@@ -101,8 +96,9 @@ export class TestyTsAdapter implements TestAdapter {
     }
 
     cancel(): void {
-        // in a "real" TestAdapter this would kill the child process for the current test run (if there is any)
-        throw new Error("Method not implemented.");
+        if (this.testRunProcess !== undefined) {
+            this.testRunProcess.kill();
+        }
     }
 
     dispose(): void {

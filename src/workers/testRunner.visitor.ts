@@ -2,7 +2,7 @@ import { TestsVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
 import { Test } from 'testyts/build/lib/tests/test';
 import { TestSuite } from 'testyts/build/lib/tests/testSuite';
 import { TestStatus } from 'testyts/build/lib/testStatus';
-import { TestEvent } from 'vscode-test-adapter-api';
+import { TestEvent, TestSuiteEvent } from 'vscode-test-adapter-api';
 
 export class TestRunnerVisitor implements TestsVisitor<void>{
     private testSuites: TestSuite[] = [];
@@ -11,13 +11,6 @@ export class TestRunnerVisitor implements TestsVisitor<void>{
 
     public async visitTestSuite(tests: TestSuite): Promise<void> {
         this.testSuites.push(tests);
-        const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.');
-        if (!this.shouldRun(currentId)) {
-            this.testSuites.pop();
-            return;
-        }
-
-        console.log(currentId.split('.').map(x => this.decodeName(x)).join('.'));
 
         try {
             await this.runAll(tests.beforeAllMethods, tests.context);
@@ -30,28 +23,6 @@ export class TestRunnerVisitor implements TestsVisitor<void>{
         }
     }
 
-    private shouldRun(current: string) {
-        const currentSplittedId = current.split('.');
-        const currentDepth = currentSplittedId.length;
-
-        for (const testId of this.testsToRun) {
-            const splittedId = testId.split('.');
-            const idDepth = splittedId.length;
-            const minDepth = Math.min(currentDepth, idDepth);
-
-            let matches = true;
-            for (let i = 0; i < minDepth; ++i) {
-                if (currentSplittedId[i] !== splittedId[i]) {
-                    matches = false;
-                }
-            }
-
-            if (matches) return true;
-        }
-
-        return false;
-    }
-
     public async visitTest(test: Test): Promise<void> {
         const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.') + '.' + this.encodeName(test.name);
         if (!this.shouldRun(currentId)) { return; }
@@ -60,8 +31,6 @@ export class TestRunnerVisitor implements TestsVisitor<void>{
             process.send(<TestEvent>{ type: 'test', state: 'skipped', test: currentId })
             return;
         }
-
-        console.log(currentId.split('.').map(x => this.decodeName(x)).join('.'));
 
         process.send(<TestEvent>{ type: 'test', state: 'running', test: currentId })
 
@@ -72,7 +41,7 @@ export class TestRunnerVisitor implements TestsVisitor<void>{
             await this.runAfterEachMethods();
         }
         catch (err) {
-            process.send(<TestEvent>{ type: 'test', state: 'failed', test: currentId })
+            process.send(<TestEvent>{ type: 'test', state: 'failed', test: currentId, message: JSON.stringify(err) })
             return;
         }
 
@@ -81,8 +50,12 @@ export class TestRunnerVisitor implements TestsVisitor<void>{
 
     private async runTests(tests: TestSuite): Promise<void> {
         for (const id of tests.testIds) {
-            const testReport = await tests.get(id).accept(this);
+            await tests.get(id).accept(this);
         }
+    }
+
+    private shouldRun(current: string) {
+        return this.testsToRun.find(x => x === current) !== undefined;
     }
 
     private async runAll(methods, context: any) {
