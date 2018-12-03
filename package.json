@@ -77,6 +77,7 @@
                 },
                 "testyTsExplorer.debuggerPort": {
                     "description": "debugger port",
+                    "default": 9229,
                     "type": "number",
                     "scope": "resource"
                 }
