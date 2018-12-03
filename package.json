@@ -76,7 +76,7 @@
                     "scope": "resource"
                 },
                 "testyTsExplorer.debuggerPort": {
-                    "description": "debugger port",
+                    "description": "port to use for debugging sessions (default: `9229`)",
                     "default": 9229,
                     "type": "number",
                     "scope": "resource"
