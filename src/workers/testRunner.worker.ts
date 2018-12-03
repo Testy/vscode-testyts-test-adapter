@@ -6,13 +6,13 @@ import { TestRunStartedEvent } from 'vscode-test-adapter-api';
 import { TestFinderVisitor } from './testFinder.visitor';
 
 try {
-    run(JSON.parse(process.argv[2]))
-        .then(testSuites => process.send(testSuites))
+    run(JSON.parse(process.argv[process.argv.length - 1]))
         .catch(err => process.send(err.message));
 }
 catch (err) {
     process.send(err.message);
 }
+
 
 export async function run(testsIds: string[]): Promise<void> {
     const testLoader = new TestsLoader();
@@ -21,7 +21,6 @@ export async function run(testsIds: string[]): Promise<void> {
 
     const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsconfig);
     testsIds = await tests.accept(new TestFinderVisitor(testsIds));
-    process.send(JSON.stringify(testsIds));
     process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
 
     const runner = new TestRunnerVisitor(testsIds);

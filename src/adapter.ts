@@ -1,4 +1,4 @@
-import { fork, ChildProcess } from 'child_process';
+import { fork, ChildProcess, exec } from 'child_process';
 import * as vscode from 'vscode';
 import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log, detectNodePath } from 'vscode-test-adapter-util';
@@ -17,7 +17,7 @@ export class TestyTsAdapter implements TestAdapter {
     get autorun(): vscode.Event<void> | undefined { return this.autorunEmitter.event; }
 
     private config: Config;
-    private testRunProcess: ChildProcess;
+    private testRunnerProcess: ChildProcess;
 
     constructor(
         public readonly workspace: vscode.WorkspaceFolder,
@@ -59,17 +59,21 @@ export class TestyTsAdapter implements TestAdapter {
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
     }
 
-    async run(tests: string[]): Promise<void> {
+    async run(tests: string[], execArgv: string[] = []): Promise<void> {
         if (!this.config) {
             return;
         }
 
         this.log.info(`Running example tests ${JSON.stringify(tests)}`);
-        // process.chdir(this.workspace.uri.fsPath);
-        // await run(tests);
 
-        this.testRunProcess = fork(require.resolve('./workers/testRunner.worker.js'), [JSON.stringify(tests)],
-            { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
+        this.testRunnerProcess = fork(
+            require.resolve('./workers/testRunner.worker.js'),
+            [JSON.stringify(tests)],
+            {
+                cwd: this.workspace.uri.fsPath,
+                execPath: this.config.nodePath,
+                execArgv: execArgv
+            })
             .on('message', (response: TestEvent | TestRunFinishedEvent) => {
                 if (response instanceof String) {
                     console.log(response);
@@ -85,19 +89,60 @@ export class TestyTsAdapter implements TestAdapter {
             .on('exit', number => {
                 this.log.info(`Test run finished with code ${number}`);
                 this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
-                this.testRunProcess = undefined;
+                this.testRunnerProcess = undefined;
             });
     }
 
-    async debug(tests: string[]): Promise<void> {
-        // in a "real" TestAdapter this would start a test run in a child process and attach the debugger to it
-        this.log.warn('debug() not implemented yet');
-        throw new Error("Method not implemented.");
+    async debug(testsToRun: string[]) {
+        if (!this.config || (testsToRun.length === 0)) {
+            return;
+        }
+
+        if (this.log.enabled) this.log.info(`Debugging test(s) ${JSON.stringify(testsToRun)} of ${this.workspace.uri.fsPath}`);
+
+        let currentSession: vscode.DebugSession | undefined;
+
+        this.run(testsToRun, [`--inspect-brk=${this.config.debuggerPort}`]);
+        if (!this.testRunnerProcess) {
+            this.log.error('Starting the worker failed');
+            return;
+        }
+
+        try {
+            this.log.info('Starting the debug session');
+            await vscode.debug.startDebugging(this.workspace, {
+                name: 'Debug TestyTs Tests',
+                type: 'node',
+                request: 'attach',
+                port: this.config.debuggerPort,
+                sourceMaps: true,
+                protocol: 'inspector',
+                timeout: 30000,
+                stopOnEntry: false,
+            });
+        }
+        catch (err) {
+            console.log(err);
+            throw err;
+        }
+
+        if (!vscode.debug.activeDebugSession) {
+            this.log.error('The debug session startup failed.');
+            this.cancel();
+            return;
+        }
+
+        const subscription = vscode.debug.onDidTerminateDebugSession((session) => {
+            if (currentSession != session) { return; }
+            this.log.info('Debug session ended');
+            this.cancel(); // just ot be sure
+            subscription.dispose();
+        });
     }
 
     cancel(): void {
-        if (this.testRunProcess !== undefined) {
-            this.testRunProcess.kill();
+        if (this.testRunnerProcess !== undefined) {
+            this.testRunnerProcess.kill();
         }
     }
 
@@ -114,6 +159,7 @@ export class TestyTsAdapter implements TestAdapter {
 
         const adapterConfig: Config = {};
         adapterConfig.nodePath = config.get('nodePath') || await detectNodePath();
+        adapterConfig.debuggerPort = adapterConfig.debuggerPort || 9220;
 
         return adapterConfig;
     }

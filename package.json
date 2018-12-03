@@ -74,6 +74,11 @@
                     "description": "path to node",
                     "type": "string",
                     "scope": "resource"
+                },
+                "testyTsExplorer.debuggerPort": {
+                    "description": "debugger port",
+                    "type": "number",
+                    "scope": "resource"
                 }
             }
         }

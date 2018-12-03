@@ -28,7 +28,7 @@ export class TestFinderVisitor implements TestsVisitor<string[]>{
 
     public async visitTest(test: Test): Promise<string[]> {
         const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.') + '.' + this.encodeName(test.name);
-        if (!this.shouldRun(currentId)) { return; }
+        if (!this.shouldRun(currentId)) { return []; }
 
         return [currentId]
     }
