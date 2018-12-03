@@ -33,7 +33,7 @@
         "publish": "vsce publish"
     },
     "dependencies": {
-        "testyts": "^0.3.0",
+        "testyts": "0.4.x",
         "ts-node": "^7.0.1",
         "tsconfig-paths": "^3.7.0",
         "tslib": "^1.9.3",
