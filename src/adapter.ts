@@ -1,9 +1,12 @@
 import { fork } from 'child_process';
 import * as vscode from 'vscode';
-import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent } from 'vscode-test-adapter-api';
+import { TestAdapter, TestEvent, TestLoadFinishedEvent, TestLoadStartedEvent, TestRunFinishedEvent, TestRunStartedEvent, TestSuiteEvent, TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log, detectNodePath } from 'vscode-test-adapter-util';
 import { runFakeTests } from './fakeTests';
 import { Config } from './models/models';
+import { TestSuite } from 'testyts/build/lib/tests/testSuite';
+import { run } from './workers/testRunner.worker';
+import { load } from './workers/testLoader.worker';
 
 export class TestyTsAdapter implements TestAdapter {
 
@@ -40,10 +43,9 @@ export class TestyTsAdapter implements TestAdapter {
 
         this.log.info('Loading example tests');
 
-
-        fork(require.resolve('./workers/testLoaderWorker.js'), [],
+        fork(require.resolve('./workers/testLoader.worker.js'), [],
             { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
-            .on('message', response => {
+            .on('message', (response: TestSuiteInfo) => {
                 if (response instanceof String) {
                     console.log(response);
                     throw response;
@@ -67,10 +69,29 @@ export class TestyTsAdapter implements TestAdapter {
 
         this.testStatesEmitter.fire(<TestEvent>{ type: 'test', state: 'passed', test: tests[0] });
 
-        // in a "real" TestAdapter this would start a test run in a child process
-        await runFakeTests(tests, this.testStatesEmitter);
-        this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+        // process.chdir(this.workspace.uri.fsPath);
+        // await run(tests);
 
+        fork(require.resolve('./workers/testRunner.worker.js'), [JSON.stringify(tests)],
+            { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
+            .on('message', (response: TestEvent | TestRunFinishedEvent) => {
+                if (response instanceof String) {
+                    console.log(response);
+                    throw response;
+                }
+                else {
+                    console.log(response);
+                    this.testStatesEmitter.fire(response);
+                }
+            })
+            .on('error', error => {
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+                throw error;
+            })
+            .on('close', number => {
+                console.log(number);
+                this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
+            });
     }
 
     async debug(tests: string[]): Promise<void> {

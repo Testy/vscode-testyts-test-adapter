@@ -4,6 +4,7 @@ import { TestyTestSuiteInfo } from './testyTestSuiteInfo';
 export class TestyTestRootInfo extends TestyTestSuiteInfo {
 
     constructor(children: Array<TestyTestRootInfo | TestyTestInfo> = []) {
-        super('root', 'TestyTs', children);
+        // TODO: Not hard code this ID
+        super('Um9vdA==', 'TestyTs', children);
     }
 }
