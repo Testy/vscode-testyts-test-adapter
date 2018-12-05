@@ -4,7 +4,7 @@
     "description": "Run your TestyTs tests in the Sidebar of Visual Studio Code",
     "icon": "img/TestyTsTestExplorer.png",
     "author": "Antoine Boisier-Michaud <aboisiermichaud@gmail.com>",
-    "publisher": "aboisier",
+    "publisher": "Testy",
     "version": "0.0.1",
     "license": "MIT",
     "homepage": "https://github.com/Testy/vscode-testyts-test-adapter",
