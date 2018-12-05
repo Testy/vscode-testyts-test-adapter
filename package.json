@@ -5,7 +5,7 @@
     "icon": "img/TestyTsTestExplorer.png",
     "author": "Antoine Boisier-Michaud <aboisiermichaud@gmail.com>",
     "publisher": "Testy",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "license": "MIT",
     "homepage": "https://github.com/Testy/vscode-testyts-test-adapter",
     "repository": {
@@ -33,7 +33,7 @@
         "publish": "vsce publish"
     },
     "dependencies": {
-        "testyts": "0.4.x",
+        "testyts": "0.5.x",
         "ts-node": "^7.0.1",
         "tsconfig-paths": "^3.7.0",
         "tslib": "^1.9.3",
