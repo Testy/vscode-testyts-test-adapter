@@ -1,9 +1,12 @@
-import { TestRunnerVisitor } from './testRunner.visitor';
 import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
 import { resolve } from 'path';
 import { TestyConfig } from 'testyts/build/lib/interfaces/config';
 import { TestRunStartedEvent } from 'vscode-test-adapter-api';
 import { TestFinderVisitor } from './testFinder.visitor';
+import { TestRunnerVisitor } from 'testyts/build/lib/tests/visitors/testRunnerVisitor';
+import { ProcessMessageTestReporterDecorator } from './processMessageTestReporterDecorator';
+import { TestsVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
+import { Report } from 'testyts/build/lib/reporting/report/report';
 
 try {
     run(JSON.parse(process.argv[process.argv.length - 1]))
@@ -12,7 +15,6 @@ try {
 catch (err) {
     process.send(err.message);
 }
-
 
 export async function run(testsIds: string[]): Promise<void> {
     const testLoader = new TestsLoader();
@@ -23,6 +25,7 @@ export async function run(testsIds: string[]): Promise<void> {
     testsIds = await tests.accept(new TestFinderVisitor(testsIds));
     process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
 
-    const runner = new TestRunnerVisitor(testsIds);
+    let runner: TestsVisitor<Report> = new TestRunnerVisitor();
+    runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
     await tests.accept(runner);
 }
