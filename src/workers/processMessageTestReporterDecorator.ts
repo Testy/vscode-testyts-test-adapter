@@ -27,7 +27,7 @@ export class ProcessMessageTestReporterDecorator extends TestsVisitorDecorator<R
         const report = await this.baseVisitTest(test);
 
         if (report instanceof FailedTestReport) {
-            process.send(<TestEvent>{ type: 'test', state: 'failed', test: currentId })
+            process.send(<TestEvent>{ type: 'test', state: 'failed', test: currentId, message: report.message })
         }
         else if (report instanceof SuccessfulTestReport) {
             process.send(<TestEvent>{ type: 'test', state: 'passed', test: currentId })
