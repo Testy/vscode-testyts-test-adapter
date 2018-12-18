@@ -1,4 +1,4 @@
-# TestyTs Test Explorer for Visual Studio Code
+![Testy.Ts logo](./img/testyts-x-explorer.png)
 
 Run your [TestyTs](https://www.npmjs.com/package/testyts) tests using the 
 [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer).
