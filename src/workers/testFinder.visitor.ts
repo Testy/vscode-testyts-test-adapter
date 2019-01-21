@@ -1,13 +1,14 @@
-import { TestsVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
-import { Test } from 'testyts/build/lib/tests/test';
-import { TestSuite } from 'testyts/build/lib/tests/testSuite';
+import { TestVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
+import { RootTestSuite } from 'testyts/build/lib/tests/rootTestSuite';
+import { TestSuiteInstance } from 'testyts/build/lib/tests/testSuite';
+import { TestInstance } from 'testyts/build/lib/tests/test';
 
-export class TestFinderVisitor implements TestsVisitor<string[]>{
-    private testSuites: TestSuite[] = [];
+export class TestFinderVisitor implements TestVisitor<string[]>{
+    private testSuites: TestSuiteInstance[] = [];
 
     constructor(private testsToRun: string[]) { }
 
-    public async visitTestSuite(testsSuites: TestSuite): Promise<string[]> {
+    public async visitTestSuite(testsSuites: TestSuiteInstance): Promise<string[]> {
         this.testSuites.push(testsSuites);
         const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.');
         if (!this.shouldRun(currentId)) {
@@ -26,11 +27,15 @@ export class TestFinderVisitor implements TestsVisitor<string[]>{
         return tests;
     }
 
-    public async visitTest(test: Test): Promise<string[]> {
+    public async visitTest(test: TestInstance): Promise<string[]> {
         const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.') + '.' + this.encodeName(test.name);
         if (!this.shouldRun(currentId)) { return []; }
 
         return [currentId]
+    }
+
+    public async visitRootTestSuite(tests: RootTestSuite): Promise<string[]> {
+        return await this.visitTestSuite(tests);
     }
 
     private shouldRun(current: string) {

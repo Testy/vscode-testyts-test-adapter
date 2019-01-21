@@ -2,20 +2,22 @@ import { TestsVisitorDecorator } from 'testyts/build/lib/tests/visitors/decorato
 import { Report } from 'testyts/build/lib/reporting/report/report';
 import { FailedTestReport } from 'testyts/build/lib/reporting/report/failedTestReport';
 import { SuccessfulTestReport } from 'testyts/build/lib/reporting/report/successfulTestReport';
-import { Test } from 'testyts/build/lib/tests/test';
-import { TestSuite } from 'testyts/build/lib/tests/testSuite';
-import { TestsVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
+import { TestInstance } from 'testyts/build/lib/tests/test';
+import { TestSuiteInstance } from 'testyts/build/lib/tests/testSuite';
+import { RootTestSuite } from 'testyts/build/lib/tests/rootTestSuite';
+import { TestVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
 import { TestStatus } from 'testyts/build/lib/testStatus';
 import { TestEvent } from 'vscode-test-adapter-api';
 
 export class ProcessMessageTestReporterDecorator extends TestsVisitorDecorator<Report>{
-    private testSuites: TestSuite[] = [];
+    
+    private testSuites: TestSuiteInstance[] = [];
 
-    constructor(baseVisitor: TestsVisitor<Report>, private testsToRun: string[], ) {
+    constructor(baseVisitor: TestVisitor<Report>, private testsToRun: string[], ) {
         super(baseVisitor);
     }
 
-    public async visitTest(test: Test): Promise<Report> {
+    public async visitTest(test: TestInstance): Promise<Report> {
         const currentId = this.testSuites.map(x => this.encodeName(x.name)).join('.') + '.' + this.encodeName(test.name);
         if (!this.shouldRun(currentId)) { return; }
 
@@ -34,7 +36,7 @@ export class ProcessMessageTestReporterDecorator extends TestsVisitorDecorator<R
         }
     }
 
-    public async visitTestSuite(testSuite: TestSuite): Promise<Report> {
+    public async visitTestSuite(testSuite: TestSuiteInstance): Promise<Report> {
         this.testSuites.push(testSuite);
         try {
             return await this.baseVisitTestSuite(testSuite);
@@ -42,6 +44,10 @@ export class ProcessMessageTestReporterDecorator extends TestsVisitorDecorator<R
         finally {
             this.testSuites.pop();
         }
+    }
+
+    public async visitRootTestSuite(tests: RootTestSuite): Promise<Report> {
+        return await this.visitTestSuite(tests);
     }
 
     private shouldRun(current: string) {

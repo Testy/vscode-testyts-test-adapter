@@ -1,20 +1,21 @@
-import { TestsVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
+import { TestVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
 import { TestyTestInfo, TestyTestSuiteInfo, TestyTestRootInfo } from '../models/models';
-import { Test } from 'testyts/build/lib/tests/test';
+import { TestInstance } from 'testyts/build/lib/tests/test';
 import { TestStatus } from 'testyts/build/lib/testStatus';
-import { TestSuite } from 'testyts/build/lib/tests/testSuite';
+import { TestSuiteInstance } from 'testyts/build/lib/tests/testSuite';
+import { RootTestSuite } from 'testyts/build/lib/tests/rootTestSuite';
 
-export class TestConverterVisitor implements TestsVisitor<TestyTestInfo | TestyTestSuiteInfo> {
+export class TestConverterVisitor implements TestVisitor<TestyTestInfo | TestyTestSuiteInfo> {
     private nameStack: string[] = [];
 
-    public async visitTest(test: Test): Promise<TestyTestInfo | TestyTestSuiteInfo> {
+    public async visitTest(test: TestInstance): Promise<TestyTestInfo | TestyTestSuiteInfo> {
         this.nameStack.push(this.encodeName(test.name));
         const info = new TestyTestInfo(this.nameStack.join('.'), test.name, test.status === TestStatus.Ignored);
         this.nameStack.pop();
         return info;
     }
 
-    public async visitTestSuite(testSuite: TestSuite): Promise<TestyTestInfo | TestyTestSuiteInfo> {
+    public async visitTestSuite(testSuite: TestSuiteInstance): Promise<TestyTestInfo | TestyTestSuiteInfo> {
         this.nameStack.push(this.encodeName(testSuite.name));
         const testInfo = testSuite.name === 'Root'
             ? new TestyTestRootInfo()
@@ -26,6 +27,10 @@ export class TestConverterVisitor implements TestsVisitor<TestyTestInfo | TestyT
 
         this.nameStack.pop();
         return testInfo;
+    }
+
+    public async visitRootTestSuite(tests: RootTestSuite): Promise<TestyTestInfo | TestyTestSuiteInfo> {
+        return await this.visitTestSuite(tests);
     }
 
     private encodeName(name: string) {
