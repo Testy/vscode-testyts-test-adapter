@@ -43,9 +43,10 @@ export class TestyTsAdapter implements TestAdapter {
         fork(require.resolve('./workers/testLoader.worker.js'), [],
             { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
             .on('message', (response: TestSuiteInfo) => {
-                if (response instanceof String) {
+                if (response instanceof String || typeof response === "string") {
+                    vscode.window.showErrorMessage(response.toString());// Let the user know what is wrong (e.g. tsc failed)
                     console.log(response);
-                    throw response;
+                    this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: null });
                 }
                 else {
                     this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: response });
