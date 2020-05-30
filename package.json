@@ -33,7 +33,8 @@
         "publish": "vsce publish"
     },
     "dependencies": {
-        "testyts": "0.7.x",
+        "jsonc-parser": "^2.2.1",
+        "testyts": "^1.0.1",
         "ts-node": "^7.0.1",
         "tsconfig-paths": "^3.7.0",
         "tslib": "^1.9.3",

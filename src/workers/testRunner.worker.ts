@@ -1,5 +1,7 @@
 import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
+import { readFileSync } from 'fs'
 import { resolve } from 'path';
+import { parse } from 'jsonc-parser'
 import { TestyConfig } from 'testyts/build/lib/interfaces/config';
 import { TestRunStartedEvent } from 'vscode-test-adapter-api';
 import { TestFinderVisitor } from './testFinder.visitor';
@@ -18,14 +20,15 @@ catch (err) {
 
 export async function run(testsIds: string[]): Promise<void> {
     const testLoader = new TestsLoader();
-    const tsconfig = require(resolve(process.cwd(), 'tsconfig.json'));
-    const testyConfig: TestyConfig = require(resolve(process.cwd(), 'testy.json'));
+
+    const testyConfig: TestyConfig = parse(readFileSync(resolve(process.cwd(), 'testy.json'),{encoding:'utf8'}));
+    const tsconfig = parse(readFileSync(resolve(process.cwd(), testyConfig.tsconfig || 'tsconfig.json'),{encoding:'utf8'}));
 
     const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsconfig);
     testsIds = await tests.accept(new TestFinderVisitor(testsIds));
     process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
 
-    let runner: TestVisitor<Report> = new TestRunnerVisitor();
+    let runner: TestVisitor<Report> = new TestRunnerVisitor(process);
     runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
     await tests.accept(runner);
 }
