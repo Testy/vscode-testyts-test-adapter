@@ -6,6 +6,7 @@
       "request": "launch",
       "name": "Example adapter",
       "runtimeExecutable": "${execPath}",
+      "preLaunchTask": "tsc",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
         "--traceResolution"
