@@ -19,8 +19,8 @@ Run your [TestyTs](https://www.npmjs.com/package/testyts) tests using the
 
 Property                        | Description
 --------------------------------|---------------------------------------------------------------
-`testyTsExplorer.debuggerPort`        | The port to use for debugging sessions (default: `9229`)
-`testyTsExplorer.nodePath`         | The path to the node executable to use. By default, it will attempt to find it on your PATH.
+`testyTsExplorer.debuggerPort`  | The port to use for debugging sessions (default: `9229`)
+`testyTsExplorer.nodePath`      | The path to the node executable to use. By default, it will attempt to find it on your PATH.
 
 
 ## Commands

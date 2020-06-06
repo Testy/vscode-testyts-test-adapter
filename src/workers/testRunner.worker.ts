@@ -1,12 +1,12 @@
-import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
-import { resolve } from 'path';
 import { TestyConfig } from 'testyts/build/lib/interfaces/config';
-import { TestRunStartedEvent } from 'vscode-test-adapter-api';
-import { TestFinderVisitor } from './testFinder.visitor';
-import { TestRunnerVisitor } from 'testyts/build/lib/tests/visitors/testRunnerVisitor';
-import { ProcessMessageTestReporterDecorator } from './processMessageTestReporterDecorator';
-import { TestVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
 import { Report } from 'testyts/build/lib/reporting/report/report';
+import { TestRunnerVisitor } from 'testyts/build/lib/tests/visitors/testRunnerVisitor';
+import { TestVisitor } from 'testyts/build/lib/tests/visitors/testVisitor';
+import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
+import { TestRunStartedEvent } from 'vscode-test-adapter-api';
+import { loadTestyTsConfig, loadTsConfig } from './configLoader';
+import { ProcessMessageTestReporterDecorator } from './processMessageTestReporterDecorator';
+import { TestFinderVisitor } from './testFinder.visitor';
 
 try {
     run(JSON.parse(process.argv[process.argv.length - 1]))
@@ -18,14 +18,14 @@ catch (err) {
 
 export async function run(testsIds: string[]): Promise<void> {
     const testLoader = new TestsLoader();
-    const tsconfig = require(resolve(process.cwd(), 'tsconfig.json'));
-    const testyConfig: TestyConfig = require(resolve(process.cwd(), 'testy.json'));
-
-    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsconfig);
+    const testyConfig: TestyConfig = loadTestyTsConfig();
+    const tsConfig = loadTsConfig();
+    
+    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
     testsIds = await tests.accept(new TestFinderVisitor(testsIds));
     process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
 
-    let runner: TestVisitor<Report> = new TestRunnerVisitor();
+    let runner: TestVisitor<Report> = new TestRunnerVisitor(process);
     runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
     await tests.accept(runner);
 }

@@ -1,7 +1,7 @@
-import { resolve } from 'path';
+import { TestyConfig } from 'testyts/build/lib/interfaces/config';
 import { TestsLoader } from 'testyts/build/lib/utils/testsLoader';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
-import { TestyConfig } from 'testyts/build/lib/interfaces/config';
+import { loadTestyTsConfig, loadTsConfig } from './configLoader';
 import { TestConverterVisitor } from './testConverter.visitor';
 
 try {
@@ -15,10 +15,12 @@ catch (err) {
 
 export async function load(): Promise<TestSuiteInfo> {
     const testLoader = new TestsLoader();
-    const tsconfig = require(resolve(process.cwd(), 'tsconfig.json'));
-    const testyConfig: TestyConfig = require(resolve(process.cwd(), 'testy.json'));
+    const testyConfig: TestyConfig = loadTestyTsConfig();
+    const tsConfig = loadTsConfig();
 
-    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsconfig);
+    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
     const testInfo = await tests.accept(new TestConverterVisitor()) as any;
     return testInfo;
 }
+
+
