@@ -44,7 +44,7 @@ export class TestyTsAdapter implements TestAdapter {
             { cwd: this.workspace.uri.fsPath, execPath: this.config.nodePath, execArgv: [] })
             .on('message', (response: TestSuiteInfo) => {
                 if (response instanceof String || typeof response === "string") {
-                    vscode.window.showErrorMessage(response.toString());// Let the user know what is wrong (e.g. tsc failed)
+                    vscode.window.showErrorMessage(response.toString());
                     console.log(response);
                     this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: null });
                 }
