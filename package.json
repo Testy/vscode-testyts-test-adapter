@@ -43,8 +43,8 @@
     },
     "devDependencies": {
         "@types/paralleljs": "0.0.18",
-        "vsce": "^1.47.0",
-        "vscode": "^1.1.21"
+        "vsce": "^1.76.1",
+        "vscode": "^1.1.37"
     },
     "engines": {
         "vscode": "^1.23.0"
