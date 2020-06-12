@@ -8,7 +8,8 @@ export function loadTestyTsConfig(): TestyConfig {
 }
 
 export function loadTsConfig() {
-    return _readFile('tsconfig.json');    
+    const testyTsConfig = loadTestyTsConfig();
+    return _readFile(testyTsConfig.tsconfig || 'tsconfig.json');    
 }
 
 function _readFile(relativePath: string) {
