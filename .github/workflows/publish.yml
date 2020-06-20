@@ -1,5 +1,5 @@
 on:
-  push:
+  create:
     tags:
       - v*
 name: Deploy Extension
