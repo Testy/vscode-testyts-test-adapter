@@ -17,15 +17,21 @@ catch (err) {
 }
 
 export async function run(testsIds: string[]): Promise<void> {
-    const testLoader = new TestsLoader();
-    const testyConfig: TestyConfig = loadTestyTsConfig();
-    const tsConfig = loadTsConfig();
-    
-    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
-    testsIds = await tests.accept(new TestFinderVisitor(testsIds));
-    process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
+    try {
+        const testLoader = new TestsLoader();
+        const testyConfig: TestyConfig = loadTestyTsConfig();
+        const tsConfig = loadTsConfig();
 
-    let runner: TestVisitor<Report> = new TestRunnerVisitor(process);
-    runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
-    await tests.accept(runner);
+        const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
+        testsIds = await tests.accept(new TestFinderVisitor(testsIds));
+        process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
+
+        let runner: TestVisitor<Report> = new TestRunnerVisitor(process);
+        runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
+        await tests.accept(runner);
+    }
+    catch (err) {
+        process.send(err.message);
+        throw err;
+    }
 }

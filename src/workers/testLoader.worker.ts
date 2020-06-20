@@ -14,13 +14,19 @@ catch (err) {
 }
 
 export async function load(): Promise<TestSuiteInfo> {
-    const testLoader = new TestsLoader();
-    const testyConfig: TestyConfig = loadTestyTsConfig();
-    const tsConfig = loadTsConfig();
+    try {
+        const testLoader = new TestsLoader();
+        const testyConfig: TestyConfig = loadTestyTsConfig();
+        const tsConfig = loadTsConfig();
 
-    const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
-    const testInfo = await tests.accept(new TestConverterVisitor()) as any;
-    return testInfo;
+        const tests = await testLoader.loadTests(process.cwd(), testyConfig.include, tsConfig);
+        const testInfo = await tests.accept(new TestConverterVisitor()) as any;
+        return testInfo;
+    }
+    catch (err) {
+        process.send(err.message);
+        throw err;
+    }
 }
 
 

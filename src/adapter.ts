@@ -61,7 +61,7 @@ export class TestyTsAdapter implements TestAdapter {
 
     async run(tests: string[], execArgv: string[] = []): Promise<void> {
         if (!this.config) {
-            return;
+            throw new Error('Config is null.');
         }
 
         this.log.info(`Running example tests ${JSON.stringify(tests)}`);
