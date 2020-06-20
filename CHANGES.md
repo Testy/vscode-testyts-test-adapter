@@ -3,6 +3,7 @@
 ## 1.1.0 
 - Added support for specifying tsconfig in testyts config - *Contribution by Spencer von der Ohe ([sazzy4o](https://github.com/sazzy4o))*
 - Improved errors logging
+- Updated dependencies - *Contribution by Spencer von der Ohe ([sazzy4o](https://github.com/sazzy4o))*
 
 ## 1.0.0 🎊
 - Made compatible with TestyTs 1.0.1 - *Contribution by Spencer von der Ohe ([sazzy4o](https://github.com/sazzy4o))*
