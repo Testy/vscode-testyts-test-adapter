@@ -5,7 +5,7 @@
     "icon": "img/TestyTsTestExplorer.png",
     "author": "Antoine Boisier-Michaud <aboisiermichaud@gmail.com>",
     "publisher": "Testy",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "homepage": "https://github.com/Testy/vscode-testyts-test-adapter",
     "repository": {
@@ -37,14 +37,14 @@
         "ts-node": "^7.0.1",
         "tsconfig-paths": "^3.7.0",
         "tslib": "^1.9.3",
-        "typescript": "^3.0.3",
+        "typescript": "^3.8.3",
         "vscode-test-adapter-api": "^1.0.1",
         "vscode-test-adapter-util": "^0.5.0"
     },
     "devDependencies": {
         "@types/paralleljs": "0.0.18",
-        "vsce": "^1.47.0",
-        "vscode": "^1.1.21"
+        "vsce": "^1.76.1",
+        "vscode": "^1.1.37"
     },
     "engines": {
         "vscode": "^1.23.0"
