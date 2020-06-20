@@ -1,7 +1,3 @@
-on:
-  push:
-    tags:
-      - v*.*.*
 name: Deploy Extension
 jobs:
   deploy:
