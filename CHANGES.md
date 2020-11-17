@@ -1,5 +1,11 @@
 # Changes
 
+## 1.1.2
+- Updated dependency to fix security issue
+
+## 1.1.1
+- Fixed whole package
+
 ## 1.1.0 
 - Added support for specifying tsconfig in testyts config - *Contribution by Spencer von der Ohe ([sazzy4o](https://github.com/sazzy4o))*
 - Improved errors logging
