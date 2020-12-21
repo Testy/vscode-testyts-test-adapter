@@ -26,7 +26,7 @@ export async function run(testsIds: string[]): Promise<void> {
         testsIds = await tests.accept(new TestFinderVisitor(testsIds));
         process.send(<TestRunStartedEvent>{ type: 'started', tests: testsIds });
 
-        let runner: TestVisitor<Report> = new TestRunnerVisitor(process);
+        let runner: TestVisitor<Report> = new TestRunnerVisitor(process, testyConfig);
         runner = new ProcessMessageTestReporterDecorator(runner, testsIds);
         await tests.accept(runner);
     }
