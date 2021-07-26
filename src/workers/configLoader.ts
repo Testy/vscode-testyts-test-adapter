@@ -16,7 +16,8 @@ function _readFile(relativePath: string) {
     const absolutePath = resolve(process.cwd(), relativePath);
     const response = readConfigFile(absolutePath, _readFileSync);
     if (response == null || response.error != null) {
-        throw new Error(`An error occured while reading the file ${absolutePath}: ${response.error.messageText}`);
+        console.warn(`An error occured while reading the file ${absolutePath}: ${response.error.messageText}`);
+        return null;
     }
 
     return response.config;
