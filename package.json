@@ -35,7 +35,7 @@
     "dependencies": {
         "testyts": "^1.1.0",
         "ts-node": "^7.0.1",
-        "tsconfig-paths": "^3.7.0",
+        "tsconfig-paths": "^3.10.1",
         "tslib": "^1.9.3",
         "typescript": "^3.8.3",
         "vscode-test-adapter-api": "^1.0.1",
